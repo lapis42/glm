@@ -1,30 +1,30 @@
-function [L, dL, H] = log_poisson_loss(w, X, y, dt, epsilon)
+function [L, dL, ddL] = log_poisson_loss(w, X, y, D)
+% L = -log p = sum(lambda) - y'Xw + 1/2*alpha*w'L'Lw
+% dL = X' * (lambda - y) + alpha*L'L*w
+% ddL = X' * diag(lambda) * X + alpha*L'L
+% D = alpha*L'L
 
-if nargin < 5
-    epsilon = 0;
+
+% compute negative log-likelihood
+X_proj = X*w;
+lambda = exp(X_proj);
+L = sum(lambda) - y'*X_proj;
+if nargin > 3
+    L = L + w'*D*w/2;
 end
 
-X_proj = X * w;
-lambda = exp(X_proj) * dt;
-
-% compute negative log-likelihood, 0.092-0.101 s
-L = - y' * X_proj + sum(lambda);
-if epsilon > 0
-    L = L + epsilon * (w(2:end)' * w(2:end));
-end
-
-% compute gradient, 0.131-0.135 s
+% compute gradient
 if nargout >= 2
-    dL = X' * (lambda - y);
-    if epsilon > 0
-        dL = dL + [0; 2 * epsilon * w(2:end)];
+    dL = X' * (lambda-y);
+    if nargin > 3
+        dL = dL + D*w;
     end
+end
     
-    % compute Hessian, 0.65-0.72 s...
-    if nargout >= 3
-        H = (lambda .* X)' * X;
-        if epsilon > 0
-            H = H + 2 * epsilon * diag([0;ones(length(w(2:end)), 1)]);
-        end
+% compute Hessian
+if nargout >= 3
+    ddL = (lambda .* X)' * X;
+    if nargin > 3
+        ddL = ddL + D;
     end
 end
