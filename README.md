@@ -27,14 +27,14 @@ out2 = glm.cvglm({X_1, X_2}, y, 'order', 2);
 fig = figure(1); clf;
 subplot(121); hold on;
 plot(beta1, 'k');
-plot(out0.w(out0.prm.index{2}), ':r');
-plot(out1.w(out1.prm.index{2}), ':g');
-plot(out2.w(out2.prm.index{2}), ':b');
+plot(out0.w{1}, ':r');
+plot(out1.w{1}, ':g');
+plot(out2.w{1}, ':b');
 subplot(122); hold on;
 plot(beta2, 'k');
-plot(out0.w(out0.prm.index{3}), ':r');
-plot(out1.w(out1.prm.index{3}), ':g');
-plot(out2.w(out2.prm.index{3}), ':b');
+plot(out0.w{2}, ':r');
+plot(out1.w{2}, ':g');
+plot(out2.w{2}, ':b');
 ```
 
 ## Notes
