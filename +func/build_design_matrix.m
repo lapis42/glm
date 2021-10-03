@@ -1,6 +1,7 @@
 function [X, prm] = build_design_matrix(X_cell, normalize)
 %BUILD_DESIGN_MATRIX adds constant column and normalizes the design matrix.
 
+if ~iscell(X_cell), X_cell = {X_cell}; end
 if nargin < 2, normalize = false; end
 assert(all(diff(cellfun(@(x) size(x, 1), X_cell)) == 0)); % make sure sample size is all the same.
 

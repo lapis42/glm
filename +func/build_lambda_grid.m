@@ -41,7 +41,7 @@ end
 
 
 
-if (strcmp(grid_option, 'on'))
+if (strcmp(grid_option, 'on') && n_type > 1)
     [lambda_grid, lambda_size] = func.ndgrid(lambda, n_type);
 elseif (strcmp(grid_option, 'each'))
     lambda_grid = [];
@@ -52,6 +52,6 @@ elseif (strcmp(grid_option, 'each'))
     end
     lambda_size = cellfun(@length, lambda);
 else
-    lambda_grid = repmat(lambda', 1, n_type);
-    lambda_size = size(lambda, 1);
+    lambda_grid = repmat(lambda{1}', 1, n_type);
+    lambda_size = size(lambda{1});
 end

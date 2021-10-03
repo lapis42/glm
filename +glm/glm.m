@@ -1,7 +1,7 @@
 function out = glm(X_cell, y, varargin)
-paramNames = {'order', 'lambda', 'lambda_range', 'n_lambda', 'remove', 'grid'};
-paramDflts = {0, [], [], [], true, 'on'};
-[order, lambda, lambda_range, n_lambda, remove, grid_option] = internal.stats.parseArgs(paramNames, paramDflts, varargin{:});
+paramNames = {'order', 'lambda', 'lambda_range', 'n_lambda', 'remove', 'grid', 'parallel'};
+paramDflts = {0, [], [], [], false, 'on', true};
+[order, lambda, lambda_range, n_lambda, remove, grid_option, parallel] = internal.stats.parseArgs(paramNames, paramDflts, varargin{:});
 
 if isempty(lambda_range)
     lambda_range = [1e-4, 1e2] * 100^order;
@@ -63,11 +63,20 @@ if n_lambda_grid > 1
     Xr = X(train, :); yr = y(train, :);
     Xt = X(~train, :); yt = y(~train, :);
 
-    parfor i = 1:n_lambda_grid
-        aLL = repelem([0, lambda_grid(i, :)], prm.n_var)' .* D;
-        lfunc = @(w) loss.log_poisson_loss(w, Xr, yr, aLL);
-        w1 = fminunc(lfunc, w0, opts);
-        deviance_mean(i) = devi(yt, Xt * w1) / n_test;
+    if (parallel)
+        parfor i = 1:n_lambda_grid
+            aLL = repelem([0, lambda_grid(i, :)], prm.n_var)' .* D;
+            lfunc = @(w) loss.log_poisson_loss(w, Xr, yr, aLL);
+            w1 = fminunc(lfunc, w0, opts);
+            deviance_mean(i) = devi(yt, Xt * w1) / n_test;
+        end
+    else
+        for i = 1:n_lambda_grid
+            aLL = repelem([0, lambda_grid(i, :)], prm.n_var)' .* D;
+            lfunc = @(w) loss.log_poisson_loss(w, Xr, yr, aLL);
+            w1 = fminunc(lfunc, w0, opts);
+            deviance_mean(i) = devi(yt, Xt * w1) / n_test;
+        end
     end
 
 

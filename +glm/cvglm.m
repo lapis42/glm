@@ -1,7 +1,7 @@
 function out = cvglm(X_cell, y, varargin)
-paramNames = {'order', 'lambda', 'lambda_range', 'n_lambda', 'cv', 'remove', 'grid'};
-paramDflts = {0, [], [], [], 5, true, 'on'};
-[order, lambda, lambda_range, n_lambda, k_fold, remove, grid_option] = internal.stats.parseArgs(paramNames, paramDflts, varargin{:});
+paramNames = {'order', 'lambda', 'lambda_range', 'n_lambda', 'cv', 'remove', 'grid', 'parallel'};
+paramDflts = {0, [], [], [], 5, false, 'on', true};
+[order, lambda, lambda_range, n_lambda, k_fold, remove, grid_option, parallel] = internal.stats.parseArgs(paramNames, paramDflts, varargin{:});
 
 if isempty(lambda_range)
     lambda_range = [1e-4, 1e2] * 100^order;
@@ -61,19 +61,35 @@ foldid = population(randperm(length(population), prm.n_sample));
 
 % Optimization
 cv_deviance = zeros(k_fold, n_lambda_grid);
-parfor ii = 1:k_fold*n_lambda_grid
-    i = mod(ii-1, k_fold) + 1;
-    j = ceil(ii/k_fold);
+if (parallel)
+    parfor ii = 1:k_fold*n_lambda_grid
+        i = mod(ii-1, k_fold) + 1;
+        j = ceil(ii/k_fold);
 
-    which = foldid == i;
-    Xr = X(~which, :); yr = y(~which, :);
-    Xt = X(which, :); yt = y(which, :);
+        which = foldid == i;
+        Xr = X(~which, :); yr = y(~which, :);
+        Xt = X(which, :); yt = y(which, :);
 
-    aLL = repelem([0, lambda_grid(j, :)], prm.n_var)' .* D; % = alpha * L' * L
-    lfunc = @(w) loss.log_poisson_loss(w, Xr, yr, aLL);
-    w1 = fminunc(lfunc, w0, opts);
-    cv_deviance(ii) = devi(yt, Xt * w1);
-end 
+        aLL = repelem([0, lambda_grid(j, :)], prm.n_var)' .* D; % = alpha * L' * L
+        lfunc = @(w) loss.log_poisson_loss(w, Xr, yr, aLL);
+        w1 = fminunc(lfunc, w0, opts);
+        cv_deviance(ii) = devi(yt, Xt * w1);
+    end 
+else
+    for ii = 1:k_fold*n_lambda_grid
+        i = mod(ii-1, k_fold) + 1;
+        j = ceil(ii/k_fold);
+
+        which = foldid == i;
+        Xr = X(~which, :); yr = y(~which, :);
+        Xt = X(which, :); yt = y(which, :);
+
+        aLL = repelem([0, lambda_grid(j, :)], prm.n_var)' .* D; % = alpha * L' * L
+        lfunc = @(w) loss.log_poisson_loss(w, Xr, yr, aLL);
+        w1 = fminunc(lfunc, w0, opts);
+        cv_deviance(ii) = devi(yt, Xt * w1);
+    end 
+end
 
 
 % Calculate best lambda

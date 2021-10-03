@@ -9,7 +9,7 @@ if nargin < 5, normalize = false; end
 
 gap = diff(peak_range) / (n_bump - 1);
 peak = peak_range(1):gap:peak_range(2);
-boxcar_func = @(x) x >= peak - gap/2 & x < peak + gap/2;
+boxcar_func = @(x) double(x >= peak - gap/2 & x < peak + gap/2);
 
 if nargout > 1
     if cut_edge
