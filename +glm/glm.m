@@ -85,7 +85,7 @@ if n_lambda_grid > 1
         lambda_min = zeros(1, prm.n_type);
         deviance_each = mat2cell(deviance_mean, 1, lambda_size);
         for i = 1:prm.n_type
-            lambda_min(i) = lambda{i}(deviance_each{i} <= min(deviance_each{i}));
+            lambda_min(i) = lambda{i}(find(deviance_each{i} <= min(deviance_each{i}), 1, 'last')); % pick the largest number
         end
     else
         lambda_min = lambda_grid(deviance_mean <= min(deviance_mean), :);
